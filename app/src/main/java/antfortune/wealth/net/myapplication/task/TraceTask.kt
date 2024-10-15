@@ -68,26 +68,10 @@ class TraceTask(
         }
     }
 
-    override fun onPingCompleted() {
-        callBack.let {
-            handler.post{
-                it.onPingCompleted()
-            }
-        }
-    }
-
     override fun onTcpTestUpdated(log: String, ip: String) {
         callBack.let {
             handler.post {
                 it.onTcpTestUpdated(log, ip)
-            }
-        }
-    }
-
-    override fun onTcpTestCompleted() {
-        callBack.let {
-            handler.post{
-                it.onTcpTestCompleted()
             }
         }
     }
@@ -108,10 +92,18 @@ class TraceTask(
         }
     }
 
-    override fun onFailed(e: Exception) {
+    override fun onPingCompleted() {
         callBack.let {
-            handler.post {
-                it.onFailed(e)
+            handler.post{
+                it.onPingCompleted()
+            }
+        }
+    }
+
+    override fun onTcpTestCompleted() {
+        callBack.let {
+            handler.post{
+                it.onTcpTestCompleted()
             }
         }
     }
@@ -136,6 +128,14 @@ class TraceTask(
         callBack.let {
             handler.post {
 
+            }
+        }
+    }
+
+    override fun onFailed(e: Exception) {
+        callBack.let {
+            handler.post {
+                it.onFailed(e)
             }
         }
     }
