@@ -17,14 +17,8 @@ import antfortune.wealth.net.myapplication.utils.LDNetUtil
 import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.Callable
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 import kotlin.collections.ArrayList
 
 class NetworkAnalyzeService(
@@ -39,7 +33,6 @@ class NetworkAnalyzeService(
     private val mainHandler = Handler(Looper.getMainLooper())
     private var isNetConnected = false
     private var isDomainParseOk = false
-    private var isSocketConnected = false
     private var netType: String? = null
     private var localIp: String = "未知"
     private var gateWay: String = "未知"
@@ -52,28 +45,6 @@ class NetworkAnalyzeService(
     private var isRunning = false
     private val telephonyManager: TelephonyManager? =
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
-    private var sExecutor: ThreadPoolExecutor? = null
-
-    init {
-        // 核心线程数
-        val corePoolSize = 4
-        // 最大线程数
-        val maximumPoolSize = 8
-        // 线程空闲保持存活的时间
-        val keepAliveTime = 1L
-        // 时间单位
-        val timeUnit = TimeUnit.MINUTES
-        // 任务队列
-        val workQueue = LinkedBlockingQueue<Runnable>()
-
-        sExecutor = ThreadPoolExecutor(
-            corePoolSize,
-            maximumPoolSize,
-            keepAliveTime,
-            timeUnit,
-            workQueue
-        )
-    }
 
     private fun onPostExecute() {
         this.stopNetworkDiagnosis()
@@ -85,7 +56,6 @@ class NetworkAnalyzeService(
             netPinger = null
             traceRouter?.resetInstance()
             traceRouter = null
-            sExecutor?.takeIf { !it.isShutdown }?.shutdown()
             isRunning = false
         }
     }
@@ -321,7 +291,7 @@ class NetworkAnalyzeService(
         if (isNetConnected) {
             // 3. 如果联网，进行 Ping、TCP 测试和 Traceroute，并发执行
             if (isDomainParseOk) {
-                performConcurrentDiagnosis() // 并发执行测试
+                performSequentialDiagnosis() // 顺序执行测试
             } else {
                 logStepInfo("\n联网但 DNS 解析失败，停止诊断")
             }
@@ -332,109 +302,46 @@ class NetworkAnalyzeService(
         return logInfo.toString()
     }
 
-    private fun performConcurrentDiagnosis() {
-        // 创建一个线程池来执行任务
-        val executor = Executors.newFixedThreadPool(3)
+    private fun performSequentialDiagnosis() {
+        // 依次对每个 IP 地址执行 TCP、Ping 和 TraceRouter 测试
+        for (ip in remoteIpList) {
+            logStepInfo("\n开始测试 IP 地址: $ip")
 
-        // 提交 Ping 分析任务
-        executor.submit {
-            performPingTests()
+            // 执行 TCP 连接测试
+            performTcpTestForIp(ip)
+
+            // 执行 Ping 测试
+            performPingTestForIp(ip)
+
+            // 执行 TraceRouter 测试
+            performTraceRouterForIp(ip)
         }
 
-        // 提交 TCP 连接测试任务
-        executor.submit {
-            performTcpConnectionTest()
-        }
-
-        // 提交 TraceRouter 任务
-        executor.submit {
-            performTraceroute()
-        }
-
-        // 等待所有任务完成后关闭线程池
-        executor.shutdown()
-        try {
-            // 设置等待时间，防止无限期等待
-            if (!executor.awaitTermination(10, TimeUnit.MINUTES)) {
-                executor.shutdownNow()
-            }
-        } catch (e: InterruptedException) {
-            executor.shutdownNow()
-        }
+        // 测试结束后执行清理操作
+        onPostExecute()
     }
 
-    private fun logBasicInfo() {
-        logAppVersionDetails()
-        logLocalNetworkInfo()
-    }
-
-    private fun performTcpConnectionTest() {
-        onTcpTestUpdated("开始 TCP 连接测试...\n")
+    private fun performTcpTestForIp(ip: String) {
         val connectionTester = NetworkConnectionTester.instance
         connectionTester?.apply {
-            isSocketConnected = initAndStartTest(
-                remoteInet = this@NetworkAnalyzeService.remoteInet,
-                remoteIpList = this@NetworkAnalyzeService.remoteIpList,
+            initAndStartTest(
+                remoteInet = this@NetworkAnalyzeService.remoteInet,  // 测试单个 IP
+                remoteIpList = listOf(ip),  // 传入单个 IP
                 listener = this@NetworkAnalyzeService
             )
         }
+        logStepInfo("TCP 测试完成: $ip")
     }
 
-    private fun performPingTests() {
-        onPingAnalysisUpdated("开始 Ping...\n")
-        if (netPinger == null) {
-            netPinger = NetworkPingTester(this, 4)
-        }
+    private fun performPingTestForIp(ip: String) {
+        netPinger = NetworkPingTester(this, 4)
 
-        // 创建一个固定大小的线程池
-        val executorService: ExecutorService = Executors.newFixedThreadPool(remoteIpList.size + 3)
-
-        // 提交并发任务
-        val tasks: MutableList<Future<Unit>> = mutableListOf()
-
-        // 设备自身网络堆栈 Ping 测试
-        tasks.add(executorService.submit(Callable {
-            logPing("\n检查设备自身的网络堆栈是否正常" ,"127.0.0.1")
-        }))
-
-        // 设备本地 IP 网络连接 Ping 测试
-        tasks.add(executorService.submit(Callable {
-            logPing("\n检查设备本地 IP 的网络连接是否正常", localIp)
-        }))
-
-        // 如果是 WIFI 网络，Ping 路由器
-        if (LDNetUtil.NET_WORK_TYPE_WIFI == netType) {
-            tasks.add(executorService.submit(Callable {
-                logPing("\n检查设备是否能够连接到本地网络的路由器", gateWay)
-            }))
-        }
-
-        // 并发 Ping 所有远端 IP 地址
-        for (ip in remoteIpList) {
-            tasks.add(executorService.submit(Callable {
-                logPing("\nPing 远端 IP 地址$ip", ip)
-            }))
-        }
-
-        // 等待所有任务完成
-        for (task in tasks) {
-            try {
-                task.get()  // 等待任务完成并获取结果
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-        // 关闭线程池
-        executorService.shutdown()
+        // 日志记录并执行 Ping 测试
+        logPing("\nPing 分析开始: $ip", ip)
         listener.onPingCompleted()
     }
 
-    private fun logPing(preString: String, ip: String) {
-        netPinger?.startTraceroutePing(preString, ip, false)
-    }
-
-    private fun performTraceroute() {
-        onTraceRouterUpdated("开始对所有解析出的 IP 地址进行 Traceroute...\n\n")
+    private fun performTraceRouterForIp(ip: String) {
         traceRouter = NetworkTracerTester.getInstance()
         traceRouter?.setTraceRouteListener(object : NetworkTracerTester.NetworkTraceListener {
             override fun onTraceRouteUpdate(log: String) {
@@ -442,23 +349,19 @@ class NetworkAnalyzeService(
             }
         })
 
-        // Latch for all traceroute tasks
-        val latch = CountDownLatch(remoteIpList.size)
-        val executorService: ExecutorService = Executors.newFixedThreadPool(remoteIpList.size)
-
-        for (ip in remoteIpList) {
-            executorService.submit {
-                traceRouter?.beginTraceRoute(ip)
-                latch.countDown()  // Decrement latch count
-            }
-        }
-
-        // Wait for all traceroutes to complete
-        latch.await()
-        executorService.shutdown()
+        traceRouter?.beginTraceRoute(ip)
+        logStepInfo("TraceRouter 完成: $ip")
         listener.onTraceRouterCompleted()
     }
 
+    private fun logPing(preString: String, ip: String) {
+        netPinger?.startTraceroutePing(preString, ip, false)
+    }
+
+    private fun logBasicInfo() {
+        logAppVersionDetails()
+        logLocalNetworkInfo()
+    }
 
     override fun onNetPingFinished(log: String) {
         logInfo.append(log)
@@ -504,5 +407,17 @@ class NetworkAnalyzeService(
 
     override fun onFailed(e: Exception) {
         listener.onFailed(e)
+    }
+
+    override fun onPingScoreReceived(score: Int) {
+        listener.onPingScoreReceived(score)
+    }
+
+    override fun onTcpTestScoreReceived(score: Int) {
+        listener.onTcpTestScoreReceived(score)
+    }
+
+    override fun onTraceRouterScoreReceived(score: Int) {
+        listener.onTraceRouterScoreReceived(score)
     }
 }

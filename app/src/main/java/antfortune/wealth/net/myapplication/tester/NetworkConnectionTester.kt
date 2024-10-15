@@ -83,7 +83,6 @@ class NetworkConnectionTester private constructor() {
 
         // 保存每个任务的 Future 结果
         val tasks: MutableList<Future<Boolean>> = mutableListOf()
-
         // 提交每个 IP 地址的连接任务
         for (i in inetList.indices) {
             val future: Future<Boolean> = executorService.submit(Callable {
@@ -103,6 +102,24 @@ class NetworkConnectionTester private constructor() {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+        }
+
+        // 在所有任务完成后，计算平均分数
+        val successfulRttTimes = rttTimes.filter { it > 0 }
+        if (successfulRttTimes.isNotEmpty()) {
+            val score = calculateConnectionScore(
+                successfulConnections = successfulRttTimes.size,
+                totalConnections = CONN_TIMES,
+                rttTimes = successfulRttTimes,
+                timeouts = rttTimes.count { it == -1L },
+                ioErrors = rttTimes.count { it == -2L },
+                reportLog = StringBuilder() // 可以将报告保存或打印
+            )
+
+            // 调用回调将分数返回
+            listener?.onTcpTestScoreReceived(score)
+        } else {
+            listener?.onTcpTestScoreReceived(0) // 若无成功连接，则返回0分
         }
 
         // 关闭线程池
@@ -202,14 +219,18 @@ class NetworkConnectionTester private constructor() {
 
     private fun generateTcpConnectionReport(ip: String?): String {
         val log = StringBuilder("\nTCP 连接耗时分析报告 (IP: $ip):\n")
+
+        // 成功连接的次数
         val successfulConnections = rttTimes.count { it > 0 }
         log.append("成功连接次数: ").append(successfulConnections).append("/").append(CONN_TIMES).append("\n")
 
+        // 连接超时和 IO 异常的统计
         val timeouts = rttTimes.count { it == -1L }
         val ioErrors = rttTimes.count { it == -2L }
         log.append("连接超时次数: ").append(timeouts).append("/").append(CONN_TIMES).append("\n")
         log.append("IO异常次数: ").append(ioErrors).append("/").append(CONN_TIMES).append("\n")
 
+        // 成功连接的 RTT 计算
         val successfulRttTimes = rttTimes.filter { it > 0 }
         if (successfulRttTimes.isNotEmpty()) {
             val averageRtt = successfulRttTimes.average().toLong()
@@ -218,14 +239,77 @@ class NetworkConnectionTester private constructor() {
             log.append("无成功的连接，无法计算平均连接时间。\n")
         }
 
-        if (successfulConnections == CONN_TIMES) {
-            log.append("网络连接状态：优秀\n\n")
-        } else if (successfulConnections > 0) {
-            log.append("网络连接状态：一般，存在部分超时或异常。\n\n")
-        } else {
-            log.append("网络连接状态：较差，所有连接均失败。\n\n")
-        }
+        // 计算网络评分
+        val score = calculateConnectionScore(successfulConnections, CONN_TIMES, successfulRttTimes, timeouts, ioErrors, log)
+        log.append("网络评分: ").append(score).append("/100\n")
 
+        // 根据评分结果输出网络状态
+        when {
+            successfulConnections == CONN_TIMES -> log.append("网络连接状态：优秀\n\n")
+            successfulConnections > 0 -> log.append("网络连接状态：一般，存在部分超时或异常。\n\n")
+            else -> log.append("网络连接状态：较差，所有连接均失败。\n\n")
+        }
         return log.toString()
     }
+
+    /**
+     * 计算网络评分，最高 100 分，并打印哪些部分没有达到满分以及原因
+     */
+    /**
+     * 计算网络评分，最高 100 分，基于连接成功率、RTT 和超时/IO 异常表现
+     * 如果没有成功连接，分数为 0，并打印每一项打分的理由
+     */
+    private fun calculateConnectionScore(
+        successfulConnections: Int,
+        totalConnections: Int,
+        rttTimes: List<Long>,
+        timeouts: Int,
+        ioErrors: Int,
+        reportLog: StringBuilder
+    ): Int {
+        var score = 0
+
+        // 1. 基础分数：成功连接比例，最高 60 分
+        if (successfulConnections == 0) {
+            // 无成功连接的情况下，分数为 0
+            reportLog.append("无成功连接，评分为 0。\n")
+            score = 0
+            logConnectionDetails(reportLog.toString())
+            return score
+        } else {
+            val connectionScore = (successfulConnections.toDouble() / totalConnections * 60).toInt()
+            score += connectionScore
+            reportLog.append("连接成功率为 ").append(successfulConnections).append("/").append(totalConnections)
+                .append("，获得 ").append(connectionScore).append(" 分。\n")
+        }
+
+        // 2. RTT 分数：根据 RTT 时间，最高 20 分
+        if (rttTimes.isNotEmpty()) {
+            val averageRtt = rttTimes.average().toLong()
+            val rttScore = when {
+                averageRtt < 100 -> 20  // RTT < 100ms，加满分 20 分
+                averageRtt in 100..300 -> 10  // RTT 100-300ms，加 10 分
+                averageRtt in 300..500 -> 5  // RTT 300-500ms，加 5 分
+                else -> 0  // RTT > 500ms，0 分
+            }
+            score += rttScore
+            reportLog.append("RTT 平均值为 ").append(averageRtt).append(" ms，获得 ").append(rttScore).append(" 分。\n")
+        } else {
+            reportLog.append("无成功连接，无法计算 RTT 分数。\n")
+        }
+
+        // 3. 超时和 IO 异常表现，最多 20 分
+        val stableConnectionScore = when {
+            (timeouts + ioErrors) == 0 -> 20  // 没有超时和 IO 异常，满分 20 分
+            (timeouts + ioErrors) < totalConnections / 2 -> 10  // 少量超时和 IO 异常，加 10 分
+            else -> 5  // 较多超时和 IO 异常，加 5 分
+        }
+        score += stableConnectionScore
+        reportLog.append("超时次数: ").append(timeouts).append("，IO 异常次数: ").append(ioErrors)
+            .append("，获得 ").append(stableConnectionScore).append(" 分。\n")
+
+        // 确保评分在 0 到 100 分之间
+        return score.coerceIn(0, 100)
+    }
 }
+

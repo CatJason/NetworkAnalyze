@@ -6,10 +6,6 @@ import java.io.InputStreamReader
 
 class NetworkPingTester(private val pinListener: LDNetPingListener, private val mSendCount: Int) {
 
-    companion object {
-        const val MATCH_PING_IP = "(?<=from ).*(?=: icmp_seq=1 ttl=)"
-    }
-
     private var successfulPings = 0
     private var failedPings = 0
 
@@ -78,10 +74,7 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
         val log = StringBuilder(256)
 
         val rttTimes = mutableListOf<Long>() // 用于存储每次 ping 的 RTT
-        var transmittedPackets = 0
-        var receivedPackets = 0
         var packetLoss = 0
-        var totalTime = 0L
         var minRtt = 0.0
         var avgRtt = 0.0
         var maxRtt = 0.0
@@ -103,13 +96,13 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
                         rttTimes.add(rtt.toLong()) // 转换为 Long 并加入列表
                     }
                 }
+
                 line.contains("packets transmitted") -> {
                     // 解析传输的包数量
                     val parts = line.split(", ")
-                    transmittedPackets = parts[0].split(" ")[0].toInt()
-                    receivedPackets = parts[1].split(" ")[0].toInt()
                     packetLoss = parts[2].split("%")[0].toInt()
                 }
+
                 line.contains("rtt min/avg/max/mdev") -> {
                     // 解析 RTT 的统计数据
                     val parts = line.split(" = ")[1].split("/")
@@ -132,50 +125,41 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
     private fun analyzeNetworkStatus(ip: String, packetLoss: Int, avgRtt: Double, minRtt: Double, maxRtt: Double, mdevRtt: Double): String {
         val analysis = StringBuilder()
 
-        // 分析丢包率
-        when (packetLoss) {
-            0 -> {
-                analysis.append("$ip 的网络连接稳定，无丢包。\n")
-            }
-            in 1..10 -> {
-                analysis.append("$ip 的网络连接有轻微丢包 (丢包率: $packetLoss%)，但不会显著影响网络性能。\n")
-            }
-            in 11..30 -> {
-                analysis.append("$ip 的网络连接有中等丢包 (丢包率: $packetLoss%)，可能会影响应用的正常使用。\n")
-            }
-            else -> {
-                analysis.append("$ip 的网络连接不稳定，丢包率高达 $packetLoss%，建议立即检查网络。\n")
-            }
-        }
+        // 成功 Ping 次数作为基础分 60 分
+        val successfulPingPercentage = (successfulPings.toDouble() / (successfulPings + failedPings)) * 100
+        val pingBaseScore = (60 * (successfulPingPercentage / 100)).toInt()
+        analysis.append("成功 Ping 次数得分：$pingBaseScore / 60\n")
 
-        // 分析往返时间 (RTT)
-        analysis.append("往返时间 (RTT) 分析:\n")
-        analysis.append("最小 RTT: $minRtt ms\n")
-        analysis.append("平均 RTT: $avgRtt ms\n")
-        analysis.append("最大 RTT: $maxRtt ms\n")
-        analysis.append("RTT 波动 (标准差): $mdevRtt ms\n")
-
-        // 根据 RTT 数据判断网络延迟
-        if (avgRtt < 50) {
-            analysis.append("网络延迟: 非常低，适合实时应用（如语音、视频通话、在线游戏）。\n")
-        } else if (avgRtt in 50.0..100.0) {
-            analysis.append("网络延迟: 较低，大多数应用不会受到明显影响。\n")
-        } else if (avgRtt in 100.0..200.0) {
-            analysis.append("网络延迟: 较高，可能会影响实时应用的体验。\n")
-        } else {
-            analysis.append("网络延迟: 非常高，可能导致明显的卡顿和延迟，建议检查网络连接。\n")
+        // 丢包率评分
+        val packetLossScore = when (packetLoss) {
+            0 -> 10
+            in 1..10 -> 10 - packetLoss // 动态扣分，丢包率越高分数越低
+            in 11..30 -> 5 // 中等丢包率，固定分数
+            else -> 0 // 丢包率过高，最低分
         }
+        analysis.append("丢包率得分：$packetLossScore / 10 (丢包率: $packetLoss%)\n")
 
-        // 根据 RTT 的波动情况分析网络的稳定性
-        if (mdevRtt < 10) {
-            analysis.append("RTT 波动较小，网络连接稳定。\n")
-        } else if (mdevRtt in 10.0..30.0) {
-            analysis.append("RTT 波动中等，可能会偶尔出现网络抖动。\n")
-        } else {
-            analysis.append("RTT 波动较大，网络不稳定，可能会频繁出现延迟变化。\n")
+        // 平均 RTT 评分
+        val avgRttScore = when {
+            avgRtt < 50 -> 15
+            avgRtt in 50.0..100.0 -> 10 + (100 - avgRtt).toInt() / 10
+            avgRtt in 100.0..200.0 -> 5 + (200 - avgRtt).toInt() / 20
+            else -> 0
         }
+        analysis.append("平均 RTT 得分：$avgRttScore / 15 (平均 RTT: $avgRtt ms)\n")
+
+        // RTT 波动评分
+        val mdevRttScore = when {
+            mdevRtt < 10 -> 15
+            mdevRtt in 10.0..30.0 -> 10 + (30 - mdevRtt).toInt() / 2
+            else -> 0
+        }
+        analysis.append("RTT 波动得分：$mdevRttScore / 15 (RTT 波动: $mdevRtt ms)\n")
+
+        // 计算总分
+        val totalScore = pingBaseScore + packetLossScore + avgRttScore + mdevRttScore
+        analysis.append("网络总评分：$totalScore 分 (满分 100 分)\n")
 
         return analysis.toString()
     }
-
 }

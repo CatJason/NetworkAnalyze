@@ -46,15 +46,6 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
-                    android:id="@+id/count_animation_device_info"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/white"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="12dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -86,15 +77,6 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
-                    android:id="@+id/count_animation_domain_access"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0"
-                    android:textSize="16sp"
-                    android:textColor="@android:color/white"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="12dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -142,11 +124,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-                <TextView
-                    android:id="@+id/tv_tcp_test"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="TCP Test: No data" />
             </LinearLayout>
 
             <!-- Ping 分析 -->
@@ -182,11 +159,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-                <TextView
-                    android:id="@+id/tv_ping_analysis"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Ping Analysis: No data" />
             </LinearLayout>
 
             <!-- TraceRouter -->
@@ -223,11 +195,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
-                <TextView
-                    android:id="@+id/tv_trace_router"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="TraceRouter: No data" />
             </LinearLayout>
 
         </LinearLayout>

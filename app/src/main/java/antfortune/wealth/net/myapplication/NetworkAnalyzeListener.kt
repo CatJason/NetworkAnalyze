@@ -52,4 +52,22 @@ interface NetworkAnalyzeListener {
      * @param e 异常
      */
     fun onFailed(e: Exception)
+
+    /**
+     * Ping分析分数回调
+     * @param score 分数
+     */
+    fun onPingScoreReceived(score: Int)
+
+    /**
+     * TCP测试分数回调
+     * @param score 分数
+     */
+    fun onTcpTestScoreReceived(score: Int)
+
+    /**
+     * Tracerouter分数回调
+     * @param score 分数
+     */
+    fun onTraceRouterScoreReceived(score: Int)
 }

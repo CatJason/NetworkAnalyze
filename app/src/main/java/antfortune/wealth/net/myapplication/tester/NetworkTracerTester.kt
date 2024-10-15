@@ -158,7 +158,7 @@ class NetworkTracerTester private constructor() {
                     waitThread.interrupt()
 
                     val logLine = String.format("%-4d %-16s %s\n", trace.hop, "*", "响应超时")
-                    log.append(logLine)
+    //                log.append(logLine)
                     trace.hop++
                     totalHops++
                     continue
@@ -210,8 +210,8 @@ class NetworkTracerTester private constructor() {
                             log.append(logLine)
                             successfulHops++
                         } else {
-                            val logLine = String.format("%-4d %-16s %s\n", trace.hop, pingIp, "响应超时")
-                            log.append(logLine)
+                     //       val logLine = String.format("%-4d %-16s %s\n", trace.hop, pingIp, "响应超时")
+                     //       log.append(logLine)
                             timeoutCount++ // 超时次数仅在有效跳数中统计
                         }
                     }
@@ -220,7 +220,7 @@ class NetworkTracerTester private constructor() {
                 } else {
                     // 未找到 IP，跳过，不计入有效跳数和超时次数
                     val logLine = String.format("%-4d %-16s %s\n", trace.hop, "*", "响应超时")
-                    log.append(logLine)
+              //      log.append(logLine)
                     trace.hop++
                     totalHops++
                 }
@@ -233,9 +233,9 @@ class NetworkTracerTester private constructor() {
 
         // 添加打印有效 IP 的一行
         if (validIpList.isNotEmpty()) {
-            log.append("\n有效的 IP 列表: ").append(validIpList.joinToString(", ")).append("\n")
+            log.append("有效的 IP 列表: ").append(validIpList.joinToString(", ")).append("\n")
         } else {
-            log.append("\n没有有效的 IP 地址\n")
+            log.append("没有有效的 IP 地址\n")
         }
 
         // 调用分析报告生成函数并将报告合并到日志中

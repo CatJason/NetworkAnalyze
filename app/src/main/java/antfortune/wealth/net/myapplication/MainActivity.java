@@ -1,9 +1,12 @@
 package antfortune.wealth.net.myapplication;
 
 import android.animation.ValueAnimator;
+import android.graphics.Typeface;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,10 +19,7 @@ import antfortune.wealth.net.myapplication.widget.CountAnimationTextView;
 
 public class MainActivity extends AppCompatActivity implements NetworkAnalyzeListener {
     TextView resultTextView;
-    TextView pingTextView;
-    TextView tcpTextView;
     TextView tvDomainAccessTextView;
-    TextView tvTraceRouter;
     ScrollView scrollView;
     CountAnimationTextView countAnimationTextViewLarge; // 顶部的大 CountAnimationTextView
 
@@ -31,14 +31,8 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
 
         resultTextView = findViewById(R.id.tv_device_info);
         resultTextView.setText("");
-        pingTextView = findViewById(R.id.tv_ping_analysis);
-        pingTextView.setText("");
-        tcpTextView = findViewById(R.id.tv_tcp_test);
-        tcpTextView.setText("");
         tvDomainAccessTextView = findViewById(R.id.tv_domain_access);
         tvDomainAccessTextView.setText("");
-        tvTraceRouter = findViewById(R.id.tv_trace_router);
-        tvTraceRouter.setText("");
 
         scrollView = findViewById(R.id.scrollView);
 
@@ -178,17 +172,23 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
 
     @Override
     public void onPingAnalysisUpdated(@NonNull String log) {
-        appendAndExpand(pingTextView, log, findViewById(R.id.ping_analysis_container));
+        LinearLayout container = findViewById(R.id.ping_analysis_container);
+        addDynamicTitleAndInfo("Ping Analysis", log, container, getResources().getColor(android.R.color.holo_green_light));
+        expandView(container);  // Optionally expand the container after adding content
     }
 
     @Override
     public void onTcpTestUpdated(@NonNull String log) {
-        appendAndExpand(tcpTextView, log, findViewById(R.id.tcp_test_container));
+        LinearLayout container = findViewById(R.id.tcp_test_container);
+        addDynamicTitleAndInfo("TCP Test", log, container, getResources().getColor(android.R.color.holo_red_light));
+        expandView(container);  // Optionally expand the container after adding content
     }
 
     @Override
     public void onTraceRouterUpdated(@NonNull String log) {
-        appendAndExpand(tvTraceRouter, log, findViewById(R.id.trace_router_container));
+        LinearLayout container = findViewById(R.id.trace_router_container);
+        addDynamicTitleAndInfo("TraceRouter", log, container, getResources().getColor(android.R.color.holo_purple));
+        expandView(container);  // Optionally expand the container after adding content
     }
 
     @Override
@@ -202,7 +202,64 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
     }
 
     @Override
+    public void onPingScoreReceived(int score) {
+        CountAnimationTextView countAnimationPing = findViewById(R.id.count_animation_ping_analysis);
+        animateCountTextView(0, score, countAnimationPing); // 设置从 0 到 score 的动画
+    }
+
+    @Override
+    public void onTcpTestScoreReceived(int score) {
+        CountAnimationTextView countAnimationTcp = findViewById(R.id.count_animation_tcp_test);
+        animateCountTextView(0, score, countAnimationTcp);
+    }
+
+    @Override
+    public void onTraceRouterScoreReceived(int score) {
+        CountAnimationTextView countAnimationTraceRouter = findViewById(R.id.count_animation_tracerouter);
+        animateCountTextView(0, score, countAnimationTraceRouter);
+    }
+
+    @Override
     public void onTraceRouterCompleted() {
         hideLoading(findViewById(R.id.tv_tracerouter_title));
+    }
+
+    private void addDynamicTitleAndInfo(final String titleText, final String log, final LinearLayout container, int backgroundColor) {
+        // 获取屏幕宽度并计算一半的宽度
+        int screenWidth = getResources().getDisplayMetrics().widthPixels;
+        int halfScreenWidth = screenWidth / 2;
+
+        // Create the title TextView
+        final TextView titleView = new TextView(this);
+        titleView.setLayoutParams(new LinearLayout.LayoutParams(
+                halfScreenWidth, ViewGroup.LayoutParams.WRAP_CONTENT));  // 设置宽度为屏幕的一半
+        titleView.setPadding(8, 8, 8, 8);
+        titleView.setGravity(Gravity.CENTER_VERTICAL);
+        titleView.setText(titleText);
+        titleView.setTextColor(getResources().getColor(android.R.color.white));
+        titleView.setBackgroundColor(backgroundColor);  // Set dynamic background color
+        titleView.setTextSize(16);
+        titleView.setTypeface(null, Typeface.BOLD);
+        titleView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.arrow_down, 0, 0, 0);
+        final TextView infoView = new TextView(this);
+        infoView.setLayoutParams(new LinearLayout.LayoutParams(
+                halfScreenWidth, ViewGroup.LayoutParams.WRAP_CONTENT));  // 设置宽度为屏幕的一半
+        infoView.setPadding(8, 8, 8, 8);
+        infoView.setText(log);
+        infoView.setVisibility(View.VISIBLE);  // Start with the info section visible
+        titleView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (infoView.getVisibility() == View.VISIBLE) {
+                    collapseView(infoView);  // Collapse the info section
+                    titleView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.arrow_right, 0, 0, 0);  // Set arrow to right
+                } else {
+                    expandView(infoView);  // Expand the info section
+                    titleView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.arrow_down, 0, 0, 0);  // Set arrow to down
+                }
+            }
+        });
+        container.addView(titleView);
+        container.addView(infoView);
     }
 }

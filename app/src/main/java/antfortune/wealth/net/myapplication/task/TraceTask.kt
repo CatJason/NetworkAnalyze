@@ -115,4 +115,28 @@ class TraceTask(
             }
         }
     }
+
+    override fun onPingScoreReceived(score: Int) {
+        callBack.let {
+            handler.post {
+
+            }
+        }
+    }
+
+    override fun onTcpTestScoreReceived(score: Int) {
+        callBack.let {
+            handler.post {
+                it.onTcpTestScoreReceived(score)
+            }
+        }
+    }
+
+    override fun onTraceRouterScoreReceived(score: Int) {
+        callBack.let {
+            handler.post {
+
+            }
+        }
+    }
 }
