@@ -73,6 +73,14 @@ class TraceTask(
         }
     }
 
+    override fun onPingCompleted() {
+        callBack.let {
+            handler.post{
+                it.onPingCompleted()
+            }
+        }
+    }
+
     override fun onTcpTestUpdated(log: String) {
         callBack.let {
             handler.post {
@@ -81,10 +89,26 @@ class TraceTask(
         }
     }
 
+    override fun onTcpTestCompleted() {
+        callBack.let {
+            handler.post{
+                it.onTcpTestCompleted()
+            }
+        }
+    }
+
     override fun onTraceRouterUpdated(log: String) {
         callBack.let {
             handler.post {
                 it.onTraceRouterUpdated(log)
+            }
+        }
+    }
+
+    override fun onTraceRouterCompleted() {
+        callBack.let {
+            handler.post{
+                it.onTraceRouterCompleted()
             }
         }
     }

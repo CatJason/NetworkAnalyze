@@ -75,100 +75,109 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
             process?.destroy()
         }
     }
+
     fun startTraceroutePing(preString: String, ip: String, isNeedL: Boolean) {
         val log = StringBuilder(256)
 
         val rttTimes = mutableListOf<Long>() // 用于存储每次 ping 的 RTT
+        var transmittedPackets = 0
+        var receivedPackets = 0
+        var packetLoss = 0
+        var totalTime = 0L
+        var minRtt = 0.0
+        var avgRtt = 0.0
+        var maxRtt = 0.0
+        var mdevRtt = 0.0
 
         // 执行 ping 命令并获取输出状态
-        val startTime = System.currentTimeMillis() // 记录开始时间
         val status = runPingCommand(ip, isNeedL)
-        val endTime = System.currentTimeMillis() // 记录结束时间
 
-        // 计算往返时间（RTT）
-        val rtt = endTime - startTime
-        if (rtt > 0) {
-            rttTimes.add(rtt)
-        }
-
-        // 检查 ping 结果中是否匹配指定的 IP 格式
-        if (Pattern.compile(MATCH_PING_IP).matcher(status).find()) {
-            log.append("\t").append(status)
-            successfulPings++ // 增加成功的 ping 计数
-        } else {
-            // 处理 ping 失败的逻辑
+        // 解析 ping 输出，提取 RTT 信息
+        val pingLines = status.split("\n")
+        for (line in pingLines) {
             when {
-                status.isEmpty() -> {
-                    log.append("非法主机或网络错误\n")
-                    failedPings++ // 未知主机或网络错误时，增加失败的 ping 计数
+                line.contains("time=") -> {
+                    // 找到包含 RTT 时间的行，类似于: 64 bytes from 183.146.26.187: icmp_seq=1 ttl=56 time=6.47 ms
+                    val timeIndex = line.indexOf("time=")
+                    val rttString = line.substring(timeIndex + 5).split(" ")[0] // 提取时间值
+                    val rtt = rttString.toDoubleOrNull() // 将 RTT 转换为 Double
+                    if (rtt != null) {
+                        rttTimes.add(rtt.toLong()) // 转换为 Long 并加入列表
+                    }
                 }
-                else -> {
-                    log.append("响应超时\n")
-                    failedPings++ // ping 超时时增加失败的 ping 计数
+                line.contains("packets transmitted") -> {
+                    // 解析传输的包数量
+                    val parts = line.split(", ")
+                    transmittedPackets = parts[0].split(" ")[0].toInt()
+                    receivedPackets = parts[1].split(" ")[0].toInt()
+                    packetLoss = parts[2].split("%")[0].toInt()
+                }
+                line.contains("rtt min/avg/max/mdev") -> {
+                    // 解析 RTT 的统计数据
+                    val parts = line.split(" = ")[1].split("/")
+                    minRtt = parts[0].toDouble()
+                    avgRtt = parts[1].toDouble()
+                    maxRtt = parts[2].toDouble()
+                    mdevRtt = parts[3].split(" ")[0].toDouble()
                 }
             }
         }
 
-        // 计算丢包率
-        val totalPings = successfulPings + failedPings
-        val lossRate = if (totalPings > 0) {
-            (failedPings * 100) / totalPings
-        } else {
-            100 // 如果总的 ping 数为 0，默认丢包率为 100%（意味着完全无法连接）
-        }
+        log.append(preString).append("\n")
+        val analysisResult = analyzeNetworkStatus(ip, packetLoss, avgRtt, minRtt, maxRtt, mdevRtt)
+        log.append(analysisResult)
 
-        // 记录 ping 结果和丢包率
-        val logStr = LDPingParse.getFormattingStr(ip, log.toString())
-        logStr.append(preString).append("丢包率: $lossRate%\n")
-
-        // 计算抖动（极差或标准差）
-        var jitter: Long = 0L
-        if (rttTimes.size > 1) {
-            jitter = calculateJitter(rttTimes)
-            logStr.append("网络抖动: $jitter ms\n")
-        } else {
-            logStr.append("未出现网络抖动\n")
-        }
-
-        // 对 Traceroute 结果进行总结分析
-        val summary = analyzeTracerouteResult(lossRate, jitter)
-        logStr.append("网络诊断总结: $summary\n\n")
-        pinListener.onNetPingFinished(logStr.toString())
-
-        // 重置计数器
-        successfulPings = 0
-        failedPings = 0
+        // 输出最终日志
+        pinListener.onNetPingFinished(log.toString())
     }
 
-    // 计算 RTT 列表的抖动 (标准差或极差)
-    private fun calculateJitter(rttTimes: List<Long>): Long {
-        if (rttTimes.size < 2) return 0L
+    private fun analyzeNetworkStatus(ip: String, packetLoss: Int, avgRtt: Double, minRtt: Double, maxRtt: Double, mdevRtt: Double): String {
+        val analysis = StringBuilder()
 
-        // 计算极差（最大RTT减去最小RTT）
-        val maxRtt = rttTimes.maxOrNull() ?: 0L
-        val minRtt = rttTimes.minOrNull() ?: 0L
-        return maxRtt - minRtt
-    }
-
-    // 分析 Traceroute 结果，根据丢包率和抖动给出总结
-    private fun analyzeTracerouteResult(lossRate: Int, jitter: Long): String {
-        return when {
-            lossRate == 100 -> {
-                "网络连接极差或无法连接"
+        // 分析丢包率
+        when (packetLoss) {
+            0 -> {
+                analysis.append("$ip 的网络连接稳定，无丢包。\n")
             }
-            lossRate > 30 -> {
-                "网络连接较差，丢包率高达 $lossRate%，可能存在严重的网络问题"
+            in 1..10 -> {
+                analysis.append("$ip 的网络连接有轻微丢包 (丢包率: $packetLoss%)，但不会显著影响网络性能。\n")
             }
-            jitter > 100 -> {
-                "网络连接一般，抖动较高 ($jitter ms)，可能导致延迟不稳定"
-            }
-            lossRate in 1..30 -> {
-                "网络连接较好，丢包率为 $lossRate%，但仍有少量丢包"
+            in 11..30 -> {
+                analysis.append("$ip 的网络连接有中等丢包 (丢包率: $packetLoss%)，可能会影响应用的正常使用。\n")
             }
             else -> {
-                "网络连接非常好，丢包率接近 0%，抖动较小 ($jitter ms)"
+                analysis.append("$ip 的网络连接不稳定，丢包率高达 $packetLoss%，建议立即检查网络。\n")
             }
         }
+
+        // 分析往返时间 (RTT)
+        analysis.append("往返时间 (RTT) 分析:\n")
+        analysis.append("最小 RTT: $minRtt ms\n")
+        analysis.append("平均 RTT: $avgRtt ms\n")
+        analysis.append("最大 RTT: $maxRtt ms\n")
+        analysis.append("RTT 波动 (标准差): $mdevRtt ms\n")
+
+        // 根据 RTT 数据判断网络延迟
+        if (avgRtt < 50) {
+            analysis.append("结论: 网络延迟非常低，适合实时应用（如语音、视频通话、在线游戏）。\n")
+        } else if (avgRtt in 50.0..100.0) {
+            analysis.append("结论: 网络延迟较低，大多数应用不会受到明显影响。\n")
+        } else if (avgRtt in 100.0..200.0) {
+            analysis.append("结论: 网络延迟较高，可能会影响实时应用的体验。\n")
+        } else {
+            analysis.append("结论: 网络延迟非常高，可能导致明显的卡顿和延迟，建议检查网络连接。\n")
+        }
+
+        // 根据 RTT 的波动情况分析网络的稳定性
+        if (mdevRtt < 10) {
+            analysis.append("RTT 波动较小，网络连接稳定。\n")
+        } else if (mdevRtt in 10.0..30.0) {
+            analysis.append("RTT 波动中等，可能会偶尔出现网络抖动。\n")
+        } else {
+            analysis.append("RTT 波动较大，网络不稳定，可能会频繁出现延迟变化。\n")
+        }
+
+        return analysis.toString()
     }
 
 }

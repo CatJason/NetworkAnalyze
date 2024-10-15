@@ -15,6 +15,7 @@ import java.net.InetAddress
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Callable
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -371,25 +372,25 @@ class NetworkAnalyzeService(
 
         // 设备自身网络堆栈 Ping 测试
         tasks.add(executorService.submit(Callable {
-            logPing("检查设备自身的网络堆栈是否正常\n" ,"127.0.0.1")
+            logPing("\n检查设备自身的网络堆栈是否正常\n" ,"127.0.0.1")
         }))
 
         // 设备本地 IP 网络连接 Ping 测试
         tasks.add(executorService.submit(Callable {
-            logPing("检查设备本地 IP 的网络连接是否正常\n", localIp)
+            logPing("\n检查设备本地 IP 的网络连接是否正常\n", localIp)
         }))
 
         // 如果是 WIFI 网络，Ping 路由器
         if (LDNetUtil.NET_WORK_TYPE_WIFI == netType) {
             tasks.add(executorService.submit(Callable {
-                logPing("检查设备是否能够连接到本地网络的路由器\n", gateWay)
+                logPing("\n检查设备是否能够连接到本地网络的路由器", gateWay)
             }))
         }
 
         // 并发 Ping 所有远端 IP 地址
         for (ip in remoteIpList) {
             tasks.add(executorService.submit(Callable {
-                logPing("Ping 远端 IP 地址\n", ip)
+                logPing("\nPing 远端 IP 地址$ip", ip)
             }))
         }
 
@@ -401,9 +402,9 @@ class NetworkAnalyzeService(
                 e.printStackTrace()
             }
         }
-
         // 关闭线程池
         executorService.shutdown()
+        listener.onPingCompleted()
     }
 
     private fun logPing(preString: String, ip: String) {
@@ -417,25 +418,25 @@ class NetworkAnalyzeService(
             override fun onTraceRouteUpdate(log: String) {
                 listener.onTraceRouterUpdated(log + "\n")
             }
-
-            override fun onTraceRouteComplete() {
-                listener.onTraceRouterUpdated("Traceroute 完成\n")
-            }
         })
 
-        // 创建一个固定大小的线程池
+        // Latch for all traceroute tasks
+        val latch = CountDownLatch(remoteIpList.size)
         val executorService: ExecutorService = Executors.newFixedThreadPool(remoteIpList.size)
 
-        // 提交每个 IP 地址的 Traceroute 任务
         for (ip in remoteIpList) {
             executorService.submit {
-                traceRouter?.beginTraceRoute(ip) // 对每个 IP 进行 Traceroute
+                traceRouter?.beginTraceRoute(ip)
+                latch.countDown()  // Decrement latch count
             }
         }
 
-        // 关闭线程池（确保所有任务完成后再关闭）
+        // Wait for all traceroutes to complete
+        latch.await()
         executorService.shutdown()
+        listener.onTraceRouterCompleted()
     }
+
 
     override fun onNetPingFinished(log: String) {
         logInfo.append(log)
@@ -457,9 +458,17 @@ class NetworkAnalyzeService(
         listener.onPingAnalysisUpdated(log)
     }
 
+    override fun onPingCompleted() {
+        listener.onPingCompleted()
+    }
+
     override fun onTcpTestUpdated(log: String) {
         logInfo.append(log)
         listener.onTcpTestUpdated(log)
+    }
+
+    override fun onTcpTestCompleted() {
+        listener.onTcpTestCompleted()
     }
 
     override fun onTraceRouterUpdated(log: String) {
@@ -467,7 +476,11 @@ class NetworkAnalyzeService(
         listener.onTraceRouterUpdated(log)
     }
 
+    override fun onTraceRouterCompleted() {
+        listener.onTraceRouterCompleted()
+    }
+
     override fun onFailed(e: Exception) {
-        TODO("Not yet implemented")
+        listener.onFailed(e)
     }
 }

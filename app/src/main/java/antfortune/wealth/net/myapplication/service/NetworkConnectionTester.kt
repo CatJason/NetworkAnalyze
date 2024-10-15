@@ -106,6 +106,7 @@ class NetworkConnectionTester private constructor() {
 
         // 关闭线程池
         executorService.shutdown()
+        listener?.onTcpTestCompleted()
 
         return connectionSuccessful
     }

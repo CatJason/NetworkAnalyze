@@ -54,6 +54,11 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         expandView(findViewById(R.id.domain_access_container));
         expandView(findViewById(R.id.trace_router_container));
 
+        // 初始态设置标题为 Loading...
+        showLoading(findViewById(R.id.tv_ping_analysis_title));
+        showLoading(findViewById(R.id.tv_tcp_test_title));
+        showLoading(findViewById(R.id.tv_tracerouter_title));
+
         TraceTask traceTask = new TraceTask(this, MainActivity.this);
         traceTask.setDeviceId(DeviceUtils.getAndroidID(MainActivity.this));
         traceTask.doTask();
@@ -130,6 +135,15 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         expandView(containerView);  // 在内容增加后，动态调整视图高度并展开
     }
 
+    private void showLoading(TextView titleView) {
+        titleView.setText(titleView.getText().toString() + " (Loading...)");
+    }
+
+    private void hideLoading(TextView titleView) {
+        String originalText = titleView.getText().toString().replace(" (Loading...)", "");
+        titleView.setText(originalText);
+    }
+
     @Override
     public void onFailed(Exception e) {
         appendAndExpand(resultTextView, "诊断失败:" + e.getMessage(), findViewById(R.id.device_info));
@@ -159,5 +173,20 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
     @Override
     public void onTraceRouterUpdated(@NonNull String log) {
         appendAndExpand(tvTraceRouter, log, findViewById(R.id.trace_router_container));
+    }
+
+    @Override
+    public void onPingCompleted() {
+        hideLoading(findViewById(R.id.tv_ping_analysis_title));
+    }
+
+    @Override
+    public void onTcpTestCompleted() {
+        hideLoading(findViewById(R.id.tv_tcp_test_title));
+    }
+
+    @Override
+    public void onTraceRouterCompleted() {
+        hideLoading(findViewById(R.id.tv_tracerouter_title));
     }
 }

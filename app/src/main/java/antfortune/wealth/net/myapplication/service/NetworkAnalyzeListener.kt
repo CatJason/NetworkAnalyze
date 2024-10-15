@@ -21,10 +21,20 @@ interface NetworkAnalyzeListener {
     fun onPingAnalysisUpdated(log: String)
 
     /**
+     * Ping分析完成时的回调
+     */
+    fun onPingCompleted()
+
+    /**
      * TCP连接测试更新时的回调
      * @param log 日志字符串
      */
     fun onTcpTestUpdated(log: String)
+
+    /**
+     * TCP连接测试完成时的回调
+     */
+    fun onTcpTestCompleted()
 
     /**
      * Tracerouter更新时的回调
@@ -32,5 +42,14 @@ interface NetworkAnalyzeListener {
      */
     fun onTraceRouterUpdated(log: String)
 
+    /**
+     * Tracerouter完成时的回调
+     */
+    fun onTraceRouterCompleted()
+
+    /**
+     * 处理失败时的回调
+     * @param e 异常
+     */
     fun onFailed(e: Exception)
 }

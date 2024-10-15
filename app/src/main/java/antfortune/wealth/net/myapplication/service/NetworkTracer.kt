@@ -177,7 +177,6 @@ class NetworkTracer private constructor() {
 
         // 一次性打印所有日志
         listener?.onTraceRouteUpdate(log.toString())
-        listener?.onTraceRouteComplete()
     }
 
     // 生成 Traceroute 结果的分析报告
@@ -259,7 +258,6 @@ class NetworkTracer private constructor() {
 
     interface NetworkTraceListener {
         fun onTraceRouteUpdate(log: String)
-        fun onTraceRouteComplete()
     }
 
     private inner class PingCommand(var host: String) {
