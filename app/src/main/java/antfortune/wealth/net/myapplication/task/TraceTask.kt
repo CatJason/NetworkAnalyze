@@ -15,12 +15,7 @@ class TraceTask(
     private val callBack: MainActivity
 ) : NetworkAnalyzeListener {
 
-    private var deviceId: String = ""
     private val handler = Handler(Looper.getMainLooper())
-
-    fun setDeviceId(deviceId: String) {
-        this.deviceId = deviceId
-    }
 
     private fun getExecRunnable(): Runnable {
         return execRunnable

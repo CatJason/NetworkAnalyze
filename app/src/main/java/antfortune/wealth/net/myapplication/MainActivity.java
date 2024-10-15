@@ -59,9 +59,7 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         showLoading(findViewById(R.id.tv_tcp_test_title));
         showLoading(findViewById(R.id.tv_tracerouter_title));
 
-        TraceTask traceTask = new TraceTask(this, MainActivity.this);
-        traceTask.setDeviceId(DeviceUtils.getAndroidID(MainActivity.this));
-        traceTask.doTask();
+        new TraceTask(this, MainActivity.this).doTask();
     }
 
     private void setupToggle(View rootView, int titleId, int containerId) {

@@ -43,25 +43,4 @@ public class DeviceUtils {
             return 0;
         }
     }
-
-    @SuppressLint("HardwareIds")
-    public static String getAndroidID(Context context) {
-        String androidId;
-        try {
-            androidId = Settings.Secure.getString(
-                    context.getContentResolver(),
-                    Settings.Secure.ANDROID_ID
-            );
-        } catch (Exception e) {
-            // 处理异常，可能是由于权限或设备问题
-            androidId = "";
-        }
-
-        // 过滤掉已知的不合法的 Android ID
-        if (TextUtils.isEmpty(androidId) || "9774d56d682e549c".equals(androidId)) {
-            return "";
-        }
-
-        return androidId;
-    }
 }
