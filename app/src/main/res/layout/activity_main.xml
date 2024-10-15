@@ -6,8 +6,7 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
-    <!-- 大的 CountAnimationTextView -->
-    <antfortune.wealth.net.myapplication.CountAnimationTextView
+    <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
         android:id="@+id/count_animation_textView_large"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -47,7 +46,7 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
                     android:id="@+id/count_animation_device_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -87,7 +86,7 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
                     android:id="@+id/count_animation_domain_access"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -127,7 +126,7 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
                     android:id="@+id/count_animation_tcp_test"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -167,7 +166,7 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
                     android:id="@+id/count_animation_ping_analysis"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -207,7 +206,7 @@
                     android:textColor="@android:color/white"
                     android:padding="8dp"
                     android:textStyle="bold" />
-                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
                     android:id="@+id/count_animation_tracerouter"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
