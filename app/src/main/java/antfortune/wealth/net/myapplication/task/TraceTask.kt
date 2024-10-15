@@ -60,10 +60,10 @@ class TraceTask(
         }
     }
 
-    override fun onPingAnalysisUpdated(log: String) {
+    override fun onPingAnalysisUpdated(log: String, ip: String) {
         callBack.let {
             handler.post {
-                it.onPingAnalysisUpdated(log)
+                it.onPingAnalysisUpdated(log, ip)
             }
         }
     }
@@ -76,10 +76,10 @@ class TraceTask(
         }
     }
 
-    override fun onTcpTestUpdated(log: String) {
+    override fun onTcpTestUpdated(log: String, ip: String) {
         callBack.let {
             handler.post {
-                it.onTcpTestUpdated(log)
+                it.onTcpTestUpdated(log, ip)
             }
         }
     }
@@ -92,10 +92,10 @@ class TraceTask(
         }
     }
 
-    override fun onTraceRouterUpdated(log: String) {
+    override fun onTraceRouterUpdated(log: String, ip: String) {
         callBack.let {
             handler.post {
-                it.onTraceRouterUpdated(log)
+                it.onTraceRouterUpdated(log, ip)
             }
         }
     }

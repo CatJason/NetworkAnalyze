@@ -25,7 +25,7 @@ class NetworkAnalyzeService(
     private val context: Context,
     private val carrierName: String,
     private val listener: NetworkAnalyzeListener
-) : NetworkPingTester.LDNetPingListener, NetworkAnalyzeListener {
+) : NetworkAnalyzeListener {
     companion object {
         const val SERVER_URL = "www.antgroup.com"
     }
@@ -305,8 +305,6 @@ class NetworkAnalyzeService(
     private fun performSequentialDiagnosis() {
         // 依次对每个 IP 地址执行 TCP、Ping 和 TraceRouter 测试
         for (ip in remoteIpList) {
-            logStepInfo("\n开始测试 IP 地址: $ip")
-
             // 执行 TCP 连接测试
             performTcpTestForIp(ip)
 
@@ -330,7 +328,6 @@ class NetworkAnalyzeService(
                 listener = this@NetworkAnalyzeService
             )
         }
-        logStepInfo("TCP 测试完成: $ip")
     }
 
     private fun performPingTestForIp(ip: String) {
@@ -345,12 +342,11 @@ class NetworkAnalyzeService(
         traceRouter = NetworkTracerTester.getInstance()
         traceRouter?.setTraceRouteListener(object : NetworkTracerTester.NetworkTraceListener {
             override fun onTraceRouteUpdate(log: String) {
-                listener.onTraceRouterUpdated(log + "\n")
+                listener.onTraceRouterUpdated(log + "\n", ip)
             }
         })
 
         traceRouter?.beginTraceRoute(ip)
-        logStepInfo("TraceRouter 完成: $ip")
         listener.onTraceRouterCompleted()
     }
 
@@ -363,11 +359,6 @@ class NetworkAnalyzeService(
         logLocalNetworkInfo()
     }
 
-    override fun onNetPingFinished(log: String) {
-        logInfo.append(log)
-        onPingAnalysisUpdated(log)
-    }
-
     override fun onDeviceInfoUpdated(log: String) {
         logInfo.append(log)
         listener.onDeviceInfoUpdated(log)
@@ -378,27 +369,24 @@ class NetworkAnalyzeService(
         listener.onDomainAccessUpdated(log)
     }
 
-    override fun onPingAnalysisUpdated(log: String) {
-        logInfo.append(log)
-        listener.onPingAnalysisUpdated(log)
+    override fun onPingAnalysisUpdated(log: String, ip: String) {
+        listener.onPingAnalysisUpdated(log, ip)
+    }
+
+    override fun onTcpTestUpdated(log: String, ip: String) {
+        listener.onTcpTestUpdated(log, ip)
+    }
+
+    override fun onTraceRouterUpdated(log: String, ip: String) {
+        listener.onTraceRouterUpdated(log, ip)
     }
 
     override fun onPingCompleted() {
         listener.onPingCompleted()
     }
 
-    override fun onTcpTestUpdated(log: String) {
-        logInfo.append(log)
-        listener.onTcpTestUpdated(log)
-    }
-
     override fun onTcpTestCompleted() {
         listener.onTcpTestCompleted()
-    }
-
-    override fun onTraceRouterUpdated(log: String) {
-        logInfo.append(log)
-        listener.onTraceRouterUpdated(log)
     }
 
     override fun onTraceRouterCompleted() {

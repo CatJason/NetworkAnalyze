@@ -18,7 +18,7 @@ interface NetworkAnalyzeListener {
      * Ping分析更新时的回调
      * @param log 日志字符串
      */
-    fun onPingAnalysisUpdated(log: String)
+    fun onPingAnalysisUpdated(log: String, ip: String)
 
     /**
      * Ping分析完成时的回调
@@ -29,7 +29,7 @@ interface NetworkAnalyzeListener {
      * TCP连接测试更新时的回调
      * @param log 日志字符串
      */
-    fun onTcpTestUpdated(log: String)
+    fun onTcpTestUpdated(log: String, ip: String)
 
     /**
      * TCP连接测试完成时的回调
@@ -40,7 +40,7 @@ interface NetworkAnalyzeListener {
      * Tracerouter更新时的回调
      * @param log 日志字符串
      */
-    fun onTraceRouterUpdated(log: String)
+    fun onTraceRouterUpdated(log: String, ip: String)
 
     /**
      * Tracerouter完成时的回调

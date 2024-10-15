@@ -48,14 +48,6 @@ class NetworkConnectionTester private constructor() {
         this.remoteIpList = remoteIpList
         this.listener = listener
         this.timeOut = timeOut
-
-        // 检查是否有有效的IP列表
-        if (remoteInet.isNullOrEmpty() || remoteIpList.isNullOrEmpty()) {
-            logConnectionDetails(HOSTERR)
-            return false
-        }
-
-        // 开始连接测试
         return testConnection()
     }
 
@@ -70,13 +62,8 @@ class NetworkConnectionTester private constructor() {
      * 使用Java多线程执行connected
      */
     private fun testConnectionWithJava(): Boolean {
-        val inetList = remoteInet
-        val ipList = remoteIpList
-
-        if (inetList == null || ipList == null) {
-            logConnectionDetails(HOSTERR)
-            return false
-        }
+        val inetList = remoteInet?: return false
+        val ipList = remoteIpList?: return false
 
         // 创建一个固定大小的线程池
         val executorService: ExecutorService = Executors.newFixedThreadPool(ipList.size)
@@ -104,24 +91,6 @@ class NetworkConnectionTester private constructor() {
             }
         }
 
-        // 在所有任务完成后，计算平均分数
-        val successfulRttTimes = rttTimes.filter { it > 0 }
-        if (successfulRttTimes.isNotEmpty()) {
-            val score = calculateConnectionScore(
-                successfulConnections = successfulRttTimes.size,
-                totalConnections = CONN_TIMES,
-                rttTimes = successfulRttTimes,
-                timeouts = rttTimes.count { it == -1L },
-                ioErrors = rttTimes.count { it == -2L },
-                reportLog = StringBuilder() // 可以将报告保存或打印
-            )
-
-            // 调用回调将分数返回
-            listener?.onTcpTestScoreReceived(score)
-        } else {
-            listener?.onTcpTestScoreReceived(0) // 若无成功连接，则返回0分
-        }
-
         // 关闭线程池
         executorService.shutdown()
         listener?.onTcpTestCompleted()
@@ -129,15 +98,9 @@ class NetworkConnectionTester private constructor() {
         return connectionSuccessful
     }
 
-    private fun testSingleIPConnection(inetAddress: InetAddress?, ip: String?): Boolean {
+    private fun testSingleIPConnection(inetAddress: InetAddress?, ip: String): Boolean {
         var isConnected = true
         val log = StringBuilder()
-
-        if (inetAddress == null || ip == null) {
-            log.append("无效的 inetAddress 或 IP\n")
-            logConnectionDetails(log.toString()) // 一次性打印日志
-            return false
-        }
 
         val socketAddress = InetSocketAddress(inetAddress, PORT)
         var timeOutIncrement = timeOut
@@ -187,7 +150,7 @@ class NetworkConnectionTester private constructor() {
         }
 
         val report = generateTcpConnectionReport(ip)
-        logConnectionDetails(log.append(report).toString())
+        logConnectionDetails(log.append(report).toString(), ip)
 
         return isConnected
     }
@@ -204,20 +167,20 @@ class NetworkConnectionTester private constructor() {
             rttTimes[attemptIndex] = end - start
         } catch (e: SocketTimeoutException) {
             rttTimes[attemptIndex] = -1
-            logConnectionDetails("第${attemptIndex + 1}次连接超时")
+            logConnectionDetails("第${attemptIndex + 1}次连接超时", socketAddress.hostString)
         } catch (e: IOException) {
             rttTimes[attemptIndex] = -2
-            logConnectionDetails("第${attemptIndex + 1}次发生IO异常")
+            logConnectionDetails("第${attemptIndex + 1}次发生IO异常", socketAddress.hostString)
         } finally {
             socket?.close()
         }
     }
 
-    private fun logConnectionDetails(log: String) {
-        listener?.onTcpTestUpdated(log)
+    private fun logConnectionDetails(log: String, ip: String) {
+        listener?.onTcpTestUpdated(log, ip)
     }
 
-    private fun generateTcpConnectionReport(ip: String?): String {
+    private fun generateTcpConnectionReport(ip: String): String {
         val log = StringBuilder("\nTCP 连接耗时分析报告 (IP: $ip):\n")
 
         // 成功连接的次数
@@ -240,7 +203,7 @@ class NetworkConnectionTester private constructor() {
         }
 
         // 计算网络评分
-        val score = calculateConnectionScore(successfulConnections, CONN_TIMES, successfulRttTimes, timeouts, ioErrors, log)
+        val score = calculateConnectionScore(successfulConnections, CONN_TIMES, successfulRttTimes, timeouts, ioErrors, log, ip)
         log.append("网络评分: ").append(score).append("/100\n")
 
         // 根据评分结果输出网络状态
@@ -265,7 +228,8 @@ class NetworkConnectionTester private constructor() {
         rttTimes: List<Long>,
         timeouts: Int,
         ioErrors: Int,
-        reportLog: StringBuilder
+        reportLog: StringBuilder,
+        ip: String
     ): Int {
         var score = 0
 
@@ -274,7 +238,7 @@ class NetworkConnectionTester private constructor() {
             // 无成功连接的情况下，分数为 0
             reportLog.append("无成功连接，评分为 0。\n")
             score = 0
-            logConnectionDetails(reportLog.toString())
+            logConnectionDetails(reportLog.toString(), ip)
             return score
         } else {
             val connectionScore = (successfulConnections.toDouble() / totalConnections * 60).toInt()

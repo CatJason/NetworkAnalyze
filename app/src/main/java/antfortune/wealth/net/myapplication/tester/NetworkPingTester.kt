@@ -1,10 +1,11 @@
 package antfortune.wealth.net.myapplication.tester
 
+import antfortune.wealth.net.myapplication.NetworkAnalyzeListener
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 
-class NetworkPingTester(private val pinListener: LDNetPingListener, private val mSendCount: Int) {
+class NetworkPingTester(private val pinListener: NetworkAnalyzeListener, private val mSendCount: Int) {
 
     private var successfulPings = 0
     private var failedPings = 0
@@ -14,7 +15,7 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
      * @author panghui
      */
     interface LDNetPingListener {
-        fun onNetPingFinished(log: String)
+        fun onNetPingFinished(log: String, ip: String)
     }
 
     /**
@@ -118,8 +119,7 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
         val analysisResult = analyzeNetworkStatus(ip, packetLoss, avgRtt, minRtt, maxRtt, mdevRtt)
         log.append(analysisResult)
 
-        // 输出最终日志
-        pinListener.onNetPingFinished(log.toString())
+        pinListener.onPingAnalysisUpdated(log.toString(), ip)
     }
 
     private fun analyzeNetworkStatus(ip: String, packetLoss: Int, avgRtt: Double, minRtt: Double, maxRtt: Double, mdevRtt: Double): String {
