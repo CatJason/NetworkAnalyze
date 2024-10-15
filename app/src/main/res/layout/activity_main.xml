@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="@android:color/white">
+
+    <antfortune.wealth.net.myapplication.NetworkAnalyzeScrollView
+        android:id="@+id/scrollView"
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#f9f9f9"
+        android:scrollbars="none"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!-- 本机信息 -->
+            <TextView
+                android:id="@+id/tv_device_info_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="本机信息"
+                android:drawableStart="@drawable/arrow_down"
+                android:background="@android:color/holo_blue_light"
+                android:textColor="@android:color/white"
+                android:padding="8dp"
+                android:textStyle="bold" />
+            <LinearLayout
+                android:id="@+id/device_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_device_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Device Info: No data" />
+            </LinearLayout>
+
+            <!-- 域名访问 -->
+            <TextView
+                android:id="@+id/tv_domain_access_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="域名访问"
+                android:drawableStart="@drawable/arrow_down"
+                android:background="@android:color/holo_orange_light"
+                android:textColor="@android:color/white"
+                android:padding="8dp"
+                android:textStyle="bold" />
+            <LinearLayout
+                android:id="@+id/domain_access_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_domain_access"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Domain Access: No data" />
+            </LinearLayout>
+
+            <!-- Ping 分析 -->
+            <TextView
+                android:id="@+id/tv_ping_analysis_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ping 分析"
+                android:drawableStart="@drawable/arrow_down"
+                android:background="@android:color/holo_green_light"
+                android:textColor="@android:color/white"
+                android:padding="8dp"
+                android:textStyle="bold" />
+            <LinearLayout
+                android:id="@+id/ping_analysis_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_ping_analysis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ping Analysis: No data" />
+            </LinearLayout>
+
+            <!-- TCP 测试 -->
+            <TextView
+                android:id="@+id/tv_tcp_test_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TCP 测试"
+                android:drawableStart="@drawable/arrow_down"
+                android:background="@android:color/holo_red_light"
+                android:textColor="@android:color/white"
+                android:padding="8dp"
+                android:textStyle="bold" />
+            <LinearLayout
+                android:id="@+id/tcp_test_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_tcp_test"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="TCP Test: No data" />
+            </LinearLayout>
+
+            <!-- TraceRouter -->
+            <TextView
+                android:id="@+id/tv_tracerouter_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="TraceRouter"
+                android:drawableStart="@drawable/arrow_right"
+                android:background="@android:color/holo_purple"
+                android:textColor="@android:color/white"
+                android:padding="8dp"
+                android:textStyle="bold" />
+            <LinearLayout
+                android:id="@+id/trace_router_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_trace_router"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="TraceRouter: No data" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </antfortune.wealth.net.myapplication.NetworkAnalyzeScrollView>
+
+</LinearLayout>
