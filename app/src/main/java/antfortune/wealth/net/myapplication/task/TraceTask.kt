@@ -4,8 +4,8 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import antfortune.wealth.net.myapplication.MainActivity
-import antfortune.wealth.net.myapplication.service.NetworkAnalyzeListener
-import antfortune.wealth.net.myapplication.service.NetworkAnalyzeService
+import antfortune.wealth.net.myapplication.NetworkAnalyzeListener
+import antfortune.wealth.net.myapplication.NetworkAnalyzeService
 
 /**
  * Created by xuzhou on 2016/8/1.

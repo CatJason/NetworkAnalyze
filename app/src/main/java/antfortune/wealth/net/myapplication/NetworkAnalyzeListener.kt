@@ -1,4 +1,4 @@
-package antfortune.wealth.net.myapplication.service
+package antfortune.wealth.net.myapplication
 
 interface NetworkAnalyzeListener {
 

@@ -1,10 +1,8 @@
-package antfortune.wealth.net.myapplication.service
+package antfortune.wealth.net.myapplication.tester
 
-import antfortune.wealth.net.myapplication.utils.LDPingParse
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
-import java.util.regex.Pattern
 
 class NetworkPingTester(private val pinListener: LDNetPingListener, private val mSendCount: Int) {
 
@@ -159,13 +157,13 @@ class NetworkPingTester(private val pinListener: LDNetPingListener, private val 
 
         // 根据 RTT 数据判断网络延迟
         if (avgRtt < 50) {
-            analysis.append("结论: 网络延迟非常低，适合实时应用（如语音、视频通话、在线游戏）。\n")
+            analysis.append("网络延迟: 非常低，适合实时应用（如语音、视频通话、在线游戏）。\n")
         } else if (avgRtt in 50.0..100.0) {
-            analysis.append("结论: 网络延迟较低，大多数应用不会受到明显影响。\n")
+            analysis.append("网络延迟: 较低，大多数应用不会受到明显影响。\n")
         } else if (avgRtt in 100.0..200.0) {
-            analysis.append("结论: 网络延迟较高，可能会影响实时应用的体验。\n")
+            analysis.append("网络延迟: 较高，可能会影响实时应用的体验。\n")
         } else {
-            analysis.append("结论: 网络延迟非常高，可能导致明显的卡顿和延迟，建议检查网络连接。\n")
+            analysis.append("网络延迟: 非常高，可能导致明显的卡顿和延迟，建议检查网络连接。\n")
         }
 
         // 根据 RTT 的波动情况分析网络的稳定性

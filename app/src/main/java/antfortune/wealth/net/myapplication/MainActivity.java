@@ -4,14 +4,15 @@ import android.animation.ValueAnimator;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import antfortune.wealth.net.myapplication.service.NetworkAnalyzeListener;
 import antfortune.wealth.net.myapplication.task.TraceTask;
+import antfortune.wealth.net.myapplication.widget.CountAnimationTextView;
 
 public class MainActivity extends AppCompatActivity implements NetworkAnalyzeListener {
     TextView resultTextView;
@@ -19,7 +20,8 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
     TextView tcpTextView;
     TextView tvDomainAccessTextView;
     TextView tvTraceRouter;
-    NetworkAnalyzeScrollView scrollView;
+    ScrollView scrollView;
+    CountAnimationTextView countAnimationTextViewLarge; // 顶部的大 CountAnimationTextView
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,6 +41,9 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         tvTraceRouter.setText("");
 
         scrollView = findViewById(R.id.scrollView);
+
+        countAnimationTextViewLarge = findViewById(R.id.count_animation_textView_large);
+        animateCountTextView(0, 80, countAnimationTextViewLarge); // 设置动画从 0 到 80
 
         // 初始化所有标题的点击事件
         setupToggle(rootView, R.id.tv_device_info_title, R.id.device_info);
@@ -60,6 +65,19 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         showLoading(findViewById(R.id.tv_tracerouter_title));
 
         new TraceTask(this, MainActivity.this).doTask();
+    }
+
+    // 为顶部的 CountAnimationTextView 设置从 0 到 80 的动画
+    private void animateCountTextView(int start, int end, final TextView textView) {
+        ValueAnimator animator = ValueAnimator.ofInt(start, end);
+        animator.setDuration(3000); // 动画持续时间 3 秒
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator valueAnimator) {
+                textView.setText(valueAnimator.getAnimatedValue().toString());
+            }
+        });
+        animator.start();
     }
 
     private void setupToggle(View rootView, int titleId, int containerId) {

@@ -6,9 +6,19 @@
     android:padding="16dp"
     android:background="@android:color/white">
 
-    <antfortune.wealth.net.myapplication.NetworkAnalyzeScrollView
-        android:id="@+id/scrollView"
+    <!-- 大的 CountAnimationTextView -->
+    <antfortune.wealth.net.myapplication.CountAnimationTextView
+        android:id="@+id/count_animation_textView_large"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="0"
+        android:textSize="24sp"
+        android:textColor="@android:color/black"
+        android:layout_marginBottom="16dp" />
 
+    <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#f9f9f9"
@@ -21,16 +31,33 @@
             android:orientation="vertical">
 
             <!-- 本机信息 -->
-            <TextView
-                android:id="@+id/tv_device_info_title"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="本机信息"
-                android:drawableStart="@drawable/arrow_down"
+                android:orientation="horizontal"
                 android:background="@android:color/holo_blue_light"
-                android:textColor="@android:color/white"
-                android:padding="8dp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tv_device_info_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="本机信息"
+                    android:drawableStart="@drawable/arrow_down"
+                    android:textColor="@android:color/white"
+                    android:padding="8dp"
+                    android:textStyle="bold" />
+                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                    android:id="@+id/count_animation_device_info"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="12dp" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/device_info"
                 android:layout_width="match_parent"
@@ -44,16 +71,33 @@
             </LinearLayout>
 
             <!-- 域名访问 -->
-            <TextView
-                android:id="@+id/tv_domain_access_title"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="域名访问"
-                android:drawableStart="@drawable/arrow_down"
+                android:orientation="horizontal"
                 android:background="@android:color/holo_orange_light"
-                android:textColor="@android:color/white"
-                android:padding="8dp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tv_domain_access_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="域名访问"
+                    android:drawableStart="@drawable/arrow_down"
+                    android:textColor="@android:color/white"
+                    android:padding="8dp"
+                    android:textStyle="bold" />
+                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                    android:id="@+id/count_animation_domain_access"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="12dp" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/domain_access_container"
                 android:layout_width="match_parent"
@@ -66,40 +110,34 @@
                     android:text="Domain Access: No data" />
             </LinearLayout>
 
-            <!-- Ping 分析 -->
-            <TextView
-                android:id="@+id/tv_ping_analysis_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Ping 分析"
-                android:drawableStart="@drawable/arrow_down"
-                android:background="@android:color/holo_green_light"
-                android:textColor="@android:color/white"
-                android:padding="8dp"
-                android:textStyle="bold" />
+            <!-- TCP 测试 -->
             <LinearLayout
-                android:id="@+id/ping_analysis_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
+                android:orientation="horizontal"
+                android:background="@android:color/holo_red_light"
+                android:gravity="center_vertical">
                 <TextView
-                    android:id="@+id/tv_ping_analysis"
-                    android:layout_width="match_parent"
+                    android:id="@+id/tv_tcp_test_title"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Ping Analysis: No data" />
+                    android:layout_weight="1"
+                    android:text="TCP 测试"
+                    android:drawableStart="@drawable/arrow_down"
+                    android:textColor="@android:color/white"
+                    android:padding="8dp"
+                    android:textStyle="bold" />
+                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                    android:id="@+id/count_animation_tcp_test"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="12dp" />
             </LinearLayout>
 
-            <!-- TCP 测试 -->
-            <TextView
-                android:id="@+id/tv_tcp_test_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="TCP 测试"
-                android:drawableStart="@drawable/arrow_down"
-                android:background="@android:color/holo_red_light"
-                android:textColor="@android:color/white"
-                android:padding="8dp"
-                android:textStyle="bold" />
             <LinearLayout
                 android:id="@+id/tcp_test_container"
                 android:layout_width="match_parent"
@@ -112,17 +150,75 @@
                     android:text="TCP Test: No data" />
             </LinearLayout>
 
-            <!-- TraceRouter -->
-            <TextView
-                android:id="@+id/tv_tracerouter_title"
+            <!-- Ping 分析 -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="TraceRouter"
-                android:drawableStart="@drawable/arrow_right"
+                android:orientation="horizontal"
+                android:background="@android:color/holo_green_light"
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tv_ping_analysis_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Ping 分析"
+                    android:drawableStart="@drawable/arrow_down"
+                    android:textColor="@android:color/white"
+                    android:padding="8dp"
+                    android:textStyle="bold" />
+                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                    android:id="@+id/count_animation_ping_analysis"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="12dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/ping_analysis_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+                <TextView
+                    android:id="@+id/tv_ping_analysis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Ping Analysis: No data" />
+            </LinearLayout>
+
+            <!-- TraceRouter -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
                 android:background="@android:color/holo_purple"
-                android:textColor="@android:color/white"
-                android:padding="8dp"
-                android:textStyle="bold" />
+                android:gravity="center_vertical">
+                <TextView
+                    android:id="@+id/tv_tracerouter_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="TraceRouter"
+                    android:drawableStart="@drawable/arrow_right"
+                    android:textColor="@android:color/white"
+                    android:padding="8dp"
+                    android:textStyle="bold" />
+                <antfortune.wealth.net.myapplication.CountAnimationTextView
+                    android:id="@+id/count_animation_tracerouter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    android:background="@android:color/holo_purple"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="12dp" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/trace_router_container"
                 android:layout_width="match_parent"
@@ -136,6 +232,6 @@
             </LinearLayout>
 
         </LinearLayout>
-    </antfortune.wealth.net.myapplication.NetworkAnalyzeScrollView>
+    </ScrollView>
 
 </LinearLayout>

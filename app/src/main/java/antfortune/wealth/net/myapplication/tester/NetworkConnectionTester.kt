@@ -1,5 +1,6 @@
-package antfortune.wealth.net.myapplication.service
+package antfortune.wealth.net.myapplication.tester
 
+import antfortune.wealth.net.myapplication.NetworkAnalyzeListener
 import java.io.IOException
 import java.net.InetAddress
 import java.net.InetSocketAddress

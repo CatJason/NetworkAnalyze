@@ -1,4 +1,4 @@
-package antfortune.wealth.net.myapplication.service
+package antfortune.wealth.net.myapplication
 
 import android.content.Context
 import android.net.ConnectivityManager
@@ -10,6 +10,9 @@ import android.os.Handler
 import android.os.Looper
 import android.telephony.TelephonyManager
 import android.text.TextUtils
+import antfortune.wealth.net.myapplication.tester.NetworkConnectionTester
+import antfortune.wealth.net.myapplication.tester.NetworkPingTester
+import antfortune.wealth.net.myapplication.tester.NetworkTracerTester
 import antfortune.wealth.net.myapplication.utils.LDNetUtil
 import java.net.InetAddress
 import java.text.SimpleDateFormat
@@ -45,7 +48,7 @@ class NetworkAnalyzeService(
     private val logInfo = StringBuilder(256)
     private var netSocker: NetworkConnectionTester? = null
     private var netPinger: NetworkPingTester? = null
-    private var traceRouter: NetworkTracer? = null
+    private var traceRouter: NetworkTracerTester? = null
     private var isRunning = false
     private val telephonyManager: TelephonyManager? =
         context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager?
@@ -226,7 +229,6 @@ class NetworkAnalyzeService(
         isDomainParseOk = resolveDomain() // 域名解析
     }
 
-
     private fun resolveDomain(): Boolean {
         // 记录开始时间
         val startTime = System.currentTimeMillis()
@@ -255,7 +257,7 @@ class NetworkAnalyzeService(
             // 遍历每个 InetAddress，逐个解析成功的 IP 地址并打印日志
             addresses.forEach { inetAddress ->
                 val ip = inetAddress.hostAddress ?: "未知IP"
-                onDomainAccessUpdated("IP 地址: $ip\n")
+                onDomainAccessUpdated("$ip\n")
                 remoteIpList.add(ip)
             }
 
@@ -392,12 +394,12 @@ class NetworkAnalyzeService(
 
         // 设备自身网络堆栈 Ping 测试
         tasks.add(executorService.submit(Callable {
-            logPing("\n检查设备自身的网络堆栈是否正常\n" ,"127.0.0.1")
+            logPing("\n检查设备自身的网络堆栈是否正常" ,"127.0.0.1")
         }))
 
         // 设备本地 IP 网络连接 Ping 测试
         tasks.add(executorService.submit(Callable {
-            logPing("\n检查设备本地 IP 的网络连接是否正常\n", localIp)
+            logPing("\n检查设备本地 IP 的网络连接是否正常", localIp)
         }))
 
         // 如果是 WIFI 网络，Ping 路由器
@@ -432,9 +434,9 @@ class NetworkAnalyzeService(
     }
 
     private fun performTraceroute() {
-        onTraceRouterUpdated("开始对所有解析出的 IP 地址进行 Traceroute...\n")
-        traceRouter = NetworkTracer.getInstance()
-        traceRouter?.setTraceRouteListener(object : NetworkTracer.NetworkTraceListener {
+        onTraceRouterUpdated("开始对所有解析出的 IP 地址进行 Traceroute...\n\n")
+        traceRouter = NetworkTracerTester.getInstance()
+        traceRouter?.setTraceRouteListener(object : NetworkTracerTester.NetworkTraceListener {
             override fun onTraceRouteUpdate(log: String) {
                 listener.onTraceRouterUpdated(log + "\n")
             }
