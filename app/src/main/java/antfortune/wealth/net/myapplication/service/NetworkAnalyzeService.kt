@@ -1,10 +1,10 @@
 package antfortune.wealth.net.myapplication.service
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.LinkProperties
 import android.net.Network
+import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -92,7 +92,6 @@ class NetworkAnalyzeService(
         onDeviceInfoUpdated(stepInfo + "\n")
     }
 
-    @SuppressLint("PermissionApiAndConstantDetector", "HardwareIds")
     private fun logAppVersionDetails() {
         val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
         logStepInfo("诊断时间: ${simpleDateFormat.format(Date())}")
@@ -168,6 +167,19 @@ class NetworkAnalyzeService(
         return proxyInfo
     }
 
+    private fun isHotspotEnabled(context: Context): Boolean {
+        val wifiManager =
+            context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        return try {
+            val method = wifiManager.javaClass.getDeclaredMethod("isWifiApEnabled")
+            method.isAccessible = true
+            method.invoke(wifiManager) as Boolean
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
+
     fun execute() {
         val executor = Executors.newSingleThreadExecutor()
         executor.execute {
@@ -202,10 +214,18 @@ class NetworkAnalyzeService(
         onDomainAccessUpdated("本地IP:\t$localIp\n")
         onDomainAccessUpdated("本地网关:\t$gateWay\n")
 
+        // 检测是否开启热点
+        if (isHotspotEnabled(context)) {
+            onDomainAccessUpdated("热点状态:\t已开启\n")
+        } else {
+            onDomainAccessUpdated("热点状态:\t未开启\n")
+        }
+
         remoteIpList.clear() // 确保列表干净
         remoteInet.clear()
         isDomainParseOk = resolveDomain() // 域名解析
     }
+
 
     private fun resolveDomain(): Boolean {
         // 记录开始时间
