@@ -1,6 +1,7 @@
 package antfortune.wealth.net.myapplication;
 
 import android.animation.ValueAnimator;
+import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
@@ -24,6 +25,9 @@ import antfortune.wealth.net.myapplication.widget.CountAnimationTextView;
 public class MainActivity extends AppCompatActivity implements NetworkAnalyzeListener {
 
     private Map<String, LinearLayout> ipViewMap = new HashMap<>(); // 用于存储每个 IP 对应的视图容器
+    private Map<String, Integer> ipTestCountMap = new HashMap<>(); // 用于存储每个 IP 的测试计数
+    private static final int TOTAL_TESTS = 3;  // 定义总共需要添加的测试数量（TCP, Ping, TraceRouter）
+
     TextView resultTextView;
     TextView tvDomainAccessTextView;
     ScrollView scrollView;
@@ -172,19 +176,31 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
         contentContainer.setVisibility(View.VISIBLE);  // 默认展开
 
-        // 设置纯色背景
-        GradientDrawable backgroundDrawable = new GradientDrawable();
-        backgroundDrawable.setColor(0xFF2196F3);  // 设置背景颜色为纯蓝色 #2196F3
-        backgroundDrawable.setCornerRadius(16);  // 设置圆角
+        // 设置 IP 标题的容器，带长下划线背景
+        LinearLayout ipTitleContainer = new LinearLayout(this);
+        ipTitleContainer.setOrientation(LinearLayout.VERTICAL);
+        ipTitleContainer.setLayoutParams(new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        ipTitleContainer.setPadding(0, 0, 0, 0);  // 无内边距
 
-        // 添加 IP 标题，并初始化为展开状态，使用向下箭头
+        // 创建 IP 标题，带长下划线
         TextView ipTitle = new TextView(this);
-        ipTitle.setText("↓ IP: " + ip);  // 默认展开，使用向下箭头
+        ipTitle.setText("↓ IP: " + ip);
         ipTitle.setTextSize(18);
-        ipTitle.setTextColor(getResources().getColor(android.R.color.white)); // 设置文字颜色为白色
+        ipTitle.setTextColor(getResources().getColor(android.R.color.black)); // 设置文字颜色为黑色
         ipTitle.setGravity(Gravity.CENTER_VERTICAL);
         ipTitle.setPadding(16, 16, 16, 16);  // 增加内边距
-        ipTitle.setBackground(backgroundDrawable);  // 设置纯色背景
+
+        // 为 IP 添加一个 View 模拟下划线，宽度与容器一致
+        View ipUnderline = new View(this);
+        LinearLayout.LayoutParams underlineParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, 2);  // 设置下划线宽度与容器宽度一致，2px 高度
+        ipUnderline.setLayoutParams(underlineParams);
+        ipUnderline.setBackgroundColor(getResources().getColor(android.R.color.black));  // 设置下划线颜色为黑色
+
+        // 将 IP 标题和下划线添加到容器
+        ipTitleContainer.addView(ipTitle);
+        ipTitleContainer.addView(ipUnderline);
 
         // 为标题设置点击事件，用于展开/收起内容容器
         ipTitle.setOnClickListener(new View.OnClickListener() {
@@ -203,34 +219,37 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
             }
         });
 
-        // 将 IP 标题和内容容器添加到 IP 容器
-        ipContainer.addView(ipTitle);
+        // 将 IP 标题容器和内容容器添加到 IP 容器
+        ipContainer.addView(ipTitleContainer);
         ipContainer.addView(contentContainer);
+
+        // 初始化该 IP 的测试计数为 0
+        ipTestCountMap.put(ip, 0);
 
         // 返回 IP 容器
         return ipContainer;
     }
 
-    private void addTitleAndLogView(LinearLayout contentContainer, String testType, String log, int borderColor) {
-        // 创建线框背景
-        GradientDrawable gradientDrawable = new GradientDrawable();
-        gradientDrawable.setColor(0x00000000);  // 设置背景颜色为透明（实心部分无填充）
-        gradientDrawable.setCornerRadius(12);  // 设置圆角半径
-        gradientDrawable.setStroke(2, borderColor);  // 设置边框的颜色和较轻的粗细
-
-        // 创建标题视图
+    private void addTitleAndLogView(LinearLayout contentContainer, String testType, String log, String ip) {
+        // 创建测试类型标题
         final TextView titleView = new TextView(this);
         LinearLayout.LayoutParams titleParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         titleParams.setMargins(0, 8, 0, 8);  // 设置上下8dp的间隔，增加视觉间距
-        titleView.setLayoutParams(titleParams);  // 应用布局参数
+        titleView.setLayoutParams(titleParams);
         titleView.setPadding(24, 24, 24, 24);  // 设置更大的内边距
         titleView.setGravity(Gravity.CENTER_VERTICAL);  // 垂直居中
-        titleView.setText("↓ " + testType);  // 默认使用向下箭头表示展开状态
-        titleView.setTextColor(getResources().getColor(android.R.color.black));  // 设置字体颜色
+        titleView.setText(testType);  // 设置测试类型标题
+        titleView.setTextColor(getResources().getColor(android.R.color.black));  // 设置字体颜色为黑色
         titleView.setTextSize(16);  // 设置字体大小
         titleView.setTypeface(null, Typeface.BOLD);  // 设置为粗体
-        titleView.setBackground(gradientDrawable);  // 设置线框背景
+
+        // 为测试类型添加下划线，宽度与文字长度一致
+        View underlineView = new View(this);
+        LinearLayout.LayoutParams underlineParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, 2);  // 下划线宽度与文字宽度一致
+        underlineView.setLayoutParams(underlineParams);
+        underlineView.setBackgroundColor(getResources().getColor(android.R.color.black));  // 设置下划线颜色为黑色
 
         // 创建内容 TextView
         final TextView infoView = new TextView(this);
@@ -241,30 +260,28 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         infoView.setTextColor(getResources().getColor(android.R.color.black));  // 设置内容字体颜色
         infoView.setVisibility(View.VISIBLE);  // 默认显示内容
 
-        // 为标题设置点击事件，点击展开或收起内容
-        titleView.setOnClickListener(new View.OnClickListener() {
-            private boolean isExpanded = true;  // 初始化为展开状态
-
-            @Override
-            public void onClick(View v) {
-                if (isExpanded) {
-                    infoView.setVisibility(View.GONE);  // 收起内容
-                    titleView.setText("→ " + testType);  // 更改为向右箭头表示收起状态
-                } else {
-                    infoView.setVisibility(View.VISIBLE);  // 展开内容
-                    titleView.setText("↓ " + testType);  // 更改为向下箭头表示展开状态
-                }
-                isExpanded = !isExpanded;  // 切换展开/收起状态
-            }
-        });
-
-        // 将二级标题和内容视图添加到内容容器中
+        // 将标题、下划线和内容视图添加到内容容器中
         contentContainer.addView(titleView);
+        contentContainer.addView(underlineView);  // 添加下划线
         contentContainer.addView(infoView);
+
+        // 更新该 IP 的测试计数
+        int currentCount = ipTestCountMap.get(ip) + 1;
+        ipTestCountMap.put(ip, currentCount);
+
+        // 检查是否添加了所有测试（TCP, Ping, TraceRouter），如果是，则收起并更新箭头方向
+        if (currentCount >= TOTAL_TESTS) {
+            collapseView(contentContainer);  // 自动收起视图
+
+            // 获取 IP 容器中的标题，并更新箭头方向
+            LinearLayout ipContainer = ipViewMap.get(ip);
+            TextView ipTitle = (TextView) ((LinearLayout) ipContainer.getChildAt(0)).getChildAt(0);
+            ipTitle.setText("→ IP: " + ip);  // 更改为向右箭头表示收起状态
+        }
     }
 
     // 动态创建和添加 TCP、Ping、TraceRoute 的视图
-    private void addDynamicViewsForIp(String ip, String log, String testType, int backgroundColor) {
+    private void addDynamicViewsForIp(String ip, String log, String testType) {
         LinearLayout ipContainer;
 
         // 检查该 IP 是否已有容器
@@ -282,12 +299,12 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
         LinearLayout contentContainer = (LinearLayout) ipContainer.getChildAt(1);
 
         // 动态添加测试类型和日志内容到内容容器
-        addTitleAndLogView(contentContainer, testType, log, backgroundColor);
+        addTitleAndLogView(contentContainer, testType, log, ip);
     }
 
     @Override
     public void onPingAnalysisUpdated(@NonNull String log, @NonNull String ip) {
-        addDynamicViewsForIp(ip, log, "Ping 分析", getResources().getColor(android.R.color.holo_green_light));
+        addDynamicViewsForIp(ip, log, "Ping 分析");
     }
 
     @Override
@@ -297,7 +314,7 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
 
     @Override
     public void onTcpTestUpdated(@NonNull String log, @NonNull String ip) {
-        addDynamicViewsForIp(ip, log, "TCP 测试", getResources().getColor(android.R.color.holo_red_light));
+        addDynamicViewsForIp(ip, log, "TCP 测试");
     }
 
     @Override
@@ -307,7 +324,7 @@ public class MainActivity extends AppCompatActivity implements NetworkAnalyzeLis
 
     @Override
     public void onTraceRouterUpdated(@NonNull String log, @NonNull String ip) {
-        addDynamicViewsForIp(ip, log, "TraceRouter 路由跟踪", getResources().getColor(android.R.color.holo_purple));
+        addDynamicViewsForIp(ip, log, "TraceRouter 路由跟踪");
     }
 
     @Override

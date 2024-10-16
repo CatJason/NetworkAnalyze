@@ -208,9 +208,9 @@ class NetworkConnectionTester private constructor() {
 
         // 根据评分结果输出网络状态
         when {
-            successfulConnections == CONN_TIMES -> log.append("网络连接状态：优秀\n\n")
-            successfulConnections > 0 -> log.append("网络连接状态：一般，存在部分超时或异常。\n\n")
-            else -> log.append("网络连接状态：较差，所有连接均失败。\n\n")
+            successfulConnections == CONN_TIMES -> log.append("网络连接状态：优秀")
+            successfulConnections > 0 -> log.append("网络连接状态：一般，存在部分超时或异常。")
+            else -> log.append("网络连接状态：较差，所有连接均失败。")
         }
         return log.toString()
     }

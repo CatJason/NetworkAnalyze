@@ -11,14 +11,6 @@ class NetworkPingTester(private val pinListener: NetworkAnalyzeListener, private
     private var failedPings = 0
 
     /**
-     * 监控NetPing的日志输出到Service
-     * @author panghui
-     */
-    interface LDNetPingListener {
-        fun onNetPingFinished(log: String, ip: String)
-    }
-
-    /**
      * 执行 ping 命令，返回控制台输出。
      *
      * @param host 要 ping 的主机地址
@@ -158,7 +150,7 @@ class NetworkPingTester(private val pinListener: NetworkAnalyzeListener, private
 
         // 计算总分
         val totalScore = pingBaseScore + packetLossScore + avgRttScore + mdevRttScore
-        analysis.append("网络总评分：$totalScore 分 (满分 100 分)\n")
+        analysis.append("网络总评分：$totalScore 分 (满分 100 分)")
 
         return analysis.toString()
     }

@@ -2,27 +2,27 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@android:color/white"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="@android:color/white">
+    android:padding="16dp">
 
     <antfortune.wealth.net.myapplication.widget.CountAnimationTextView
         android:id="@+id/count_animation_textView_large"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:gravity="center"
         android:text="0"
-        android:textSize="24sp"
         android:textColor="@android:color/black"
-        android:layout_marginBottom="16dp" />
+        android:textSize="24sp" />
 
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#f9f9f9"
-        android:scrollbars="none"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -33,18 +33,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:background="@android:color/holo_blue_light"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/tv_device_info_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="本机信息"
                     android:drawableStart="@drawable/arrow_down"
-                    android:textColor="@android:color/white"
                     android:padding="8dp"
+                    android:text="本机信息"
+                    android:textColor="@android:color/white"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -53,6 +54,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
+
                 <TextView
                     android:id="@+id/tv_device_info"
                     android:layout_width="match_parent"
@@ -64,18 +66,19 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
                 android:background="@android:color/holo_orange_light"
-                android:gravity="center_vertical">
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
                 <TextView
                     android:id="@+id/tv_domain_access_title"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="域名访问"
                     android:drawableStart="@drawable/arrow_down"
-                    android:textColor="@android:color/white"
                     android:padding="8dp"
+                    android:text="域名访问"
+                    android:textColor="@android:color/white"
                     android:textStyle="bold" />
             </LinearLayout>
 
@@ -84,6 +87,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
+
                 <TextView
                     android:id="@+id/tv_domain_access"
                     android:layout_width="match_parent"
@@ -91,13 +95,29 @@
                     android:text="Domain Access: No data" />
             </LinearLayout>
 
-            <!-- 用于动态添加Ping、TCP、TraceRouter视图的容器 -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@android:color/holo_green_light"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:gravity="center_vertical"
+                    android:text="IP访问"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="0dp"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
             <LinearLayout
                 android:id="@+id/dynamic_container"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical">
-            </LinearLayout>
+                android:orientation="vertical"></LinearLayout>
 
         </LinearLayout>
     </ScrollView>
